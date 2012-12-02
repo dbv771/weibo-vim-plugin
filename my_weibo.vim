@@ -6,6 +6,8 @@
 "               可以从这里获取到最新的版本:
 "               https://github.com/wusuopu/weibo-vim-plugin
 "
+"               注意：运行该程序需要先安装pycurl，python-webkit，pygtk软件包。
+"
 "       Author: LongChangjin
 "        Email: admin@longchangjin.cn
 "
@@ -213,6 +215,7 @@ class Login(object):
         elif state == webkit.LOAD_COMMITTED:
             u = urlparse.urlparse(url)
             if u.netloc == self.CALLBACK:
+                web.stop_loading()
                 #print "OK!", url
                 query = urlparse.parse_qs(u.query)
                 if 'code' in query:
@@ -292,7 +295,6 @@ class Weibo(object):
             elif self.login.error_code == self.login.UNKNOWN_ERROR:
                 print "用户认证错误： 未知错误"
             return False
-        print "login over:", self.login.code
         return Author(self.config, self.login.code).get_access_token()
         
     def update(self, content):
@@ -309,8 +311,12 @@ class Weibo(object):
         if back:
             if 'error_code' in back:
                 print '发表失败! ret:%d, error:%s' % (back['error_code'], str(back['error']))
+                if str(back['error_code']) == '21315 ' or str(back['error_code']) == '21327':
+                        print 'access_token已过期，尝试重新获取'
+                        if self.get_author():
+                            print "重新获取access_token成功。请重新发表内容! "
             else:
-                print '发表成功!'
+                print '\n=============发表成功!====================='
         else:
             print '发表失败! 可能原因为: 网络有问题'
 
